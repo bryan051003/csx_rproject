@@ -6,11 +6,11 @@ answer <- c(substr(answer,1,1),substr(answer,2,2),substr(answer,3,3),substr(answ
 time <- 0
 repeat{
   
-  enter <- as.numeric(readline("½Ð¿é¤J¤@²Õ¥|¦ì¼Æ¦r:"))
+  enter <- as.numeric(readline("請輸入一組四位數字:"))
   while(enter < 1000 || enter >9999){
-    cat("¿é¤J¿ù»~!")
+    cat("輸入錯誤!")
     time <- time + 1
-    enter <- as.numeric(readline("½Ð¿é¤J¤@²Õ¥|¦ì¼Æ¦r:"))
+    enter <- as.numeric(readline("請輸入一組四位數字:"))
   }
   
   enter <- as.character(enter)
@@ -31,7 +31,7 @@ repeat{
   }
   cat(a,"A",b,"B","\n")
   time <- time + 1
-  if(a == 4){cat("²q¹ï!","¦@²q",time, "¦¸", "\n")
+  if(a == 4){cat("猜對!","共猜",time, "次", "\n")
     break}
 }
 
