@@ -6,11 +6,11 @@ answer <- c(substr(answer,1,1),substr(answer,2,2),substr(answer,3,3),substr(answ
 time <- 0
 repeat{
   
-  enter <- as.numeric(readline("½Ð¿é¤J¤@²Õ¥|¦ì¼Æ¦r:"))
+  enter <- as.numeric(readline("Â½ÃÂ¿Ã©Â¤JÂ¤@Â²Ã•Â¥|Â¦Ã¬Â¼Ã†Â¦r:"))
   while(enter < 1000 || enter >9999){
-    cat("¿é¤J¿ù»~!")
+    cat("Â¿Ã©Â¤JÂ¿Ã¹Â»~!")
     time <- time + 1
-    enter <- as.numeric(readline("½Ð¿é¤J¤@²Õ¥|¦ì¼Æ¦r:"))
+    enter <- as.numeric(readline("Â½ÃÂ¿Ã©Â¤JÂ¤@Â²Ã•Â¥|Â¦Ã¬Â¼Ã†Â¦r:"))
   }
   
   enter <- as.character(enter)
@@ -31,7 +31,7 @@ repeat{
   }
   cat(a,"A",b,"B","\n")
   time <- time + 1
-  if(a == 4){cat("²q¹ï!","¦@²q",time, "¦¸", "\n")
+  if(a == 4){cat("Â²qÂ¹Ã¯!","Â¦@Â²q",time, "Â¦Â¸", "\n")
     break}
 }
 
