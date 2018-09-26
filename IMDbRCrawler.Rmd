@@ -1,0 +1,49 @@
+---
+title: "IMDbRCrawler"
+author: "b10401038"
+date: "2018¦~9¤ë25¤é"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## IMDb TOP 250 TV Shows
+
+Learn how to use **rvest** and make a simple table
+
+source:https://www.imdb.com/chart/toptv/?ref_=nv_tvv_250
+
+```{r warning=FALSE, message=FALSE}
+library(rvest)
+
+#IMDb Top Rated TV Shows
+page.source <- read_html("https://www.imdb.com/chart/toptv/?ref_=nv_tvv_250")
+```
+
+Use **CSS selector** select **title**, **year**, **rate** informations
+
+```{r}
+# title
+title <- html_nodes(page.source,".titleColumn a")
+# year
+year <- html_nodes(page.source,".secondaryInfo")
+# rate
+rate <- html_nodes(page.source,"#main strong")
+
+# title
+tv.title <- html_text(title)
+# year
+tv.year <- html_text(year)
+# rate
+tv.rate <- html_text(rate)
+
+```
+
+Make data frame and show the results
+```{r}
+tv.df <- data.frame(tv.title, tv.year, tv.rate)
+colnames(tv.df) <- c("title", "year", "rate")
+tv.df
+```
