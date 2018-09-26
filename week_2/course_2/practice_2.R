@@ -11,7 +11,7 @@ GetBmi <- function (my.height.cm, my.weight.kg) {
 ### Part I - 讀取資料與查看資料框內容 ##############################################
 # 使用read.table()讀取test_data.csv
 # 請注意sep, header的用途, 以及stringsAsFactors = F的影響
-df <- read.table('test_data.csv', sep = ',', header = T, stringsAsFactors = F)
+df <- read.table('C:/Users/USER/Desktop/test_data.csv', sep = ',', header = T, stringsAsFactors = F)
 
 # 使用dim()查看df的維度(列數與欄數)
 dim(df)
