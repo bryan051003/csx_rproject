@@ -1,7 +1,7 @@
 ---
 title: "IMDbRCrawler"
 author: "b10401038"
-date: "2018¦~9¤ë25¤é"
+date: "2018Â¦~9Â¤Ã«25Â¤Ã©"
 output: html_document
 ---
 
