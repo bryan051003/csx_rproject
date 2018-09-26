@@ -1,5 +1,5 @@
 
-### practice_1_answer
+### practice_1
 ### functions
 
 ### function SayHello #####################################################
