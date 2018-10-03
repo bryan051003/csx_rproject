@@ -41,6 +41,10 @@ The table below represents weekly 2018 retail scan data for National retail volu
 
 [about PLU](http://indexfresh.com/retail-foodservice/brands/packaging/plus/)
 
+>Data Analysis And Visualization
+
+Do some element changes to organise materials in raw csv data
+
 ```{r warning=FALSE}
 library(ggplot2)
 library(RColorBrewer)
@@ -55,6 +59,7 @@ str(avocado)
 
 
 Compare the average price between two types of avocado in each year
+
 ```{r}
 ggplot(avocado, aes(year, AveragePrice,colour = type)) +
   geom_boxplot()
@@ -62,6 +67,7 @@ ggplot(avocado, aes(year, AveragePrice,colour = type)) +
 
 
 Trend chart of avocado price
+
 ```{r}
 ggplot(avocado, aes(Date, AveragePrice, colour = type)) +
   geom_point() +
@@ -71,6 +77,7 @@ ggplot(avocado, aes(Date, AveragePrice, colour = type)) +
 
 
 Distribution of average price and sales volume in three different PLU type
+
 ```{r}
 ggplot(avocado, aes(AveragePrice, X4046)) +
   geom_point(color=brewer.pal(9, "YlGn")[4])
