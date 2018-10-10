@@ -1,0 +1,105 @@
+---
+title: "Wordcloud_Twitter#futurebass"
+author: "b10401038"
+date: "2018年10月10日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Future bass is an electronic dance music genre
+ 
+*** 
+ 
+## Import needed libraries
+
+```{r warning=FALSE, eval=FALSE}
+rm(list=ls(all.names=TRUE)) 
+library(twitteR)
+library(tm)
+library(SnowballC)
+library(wordcloud)
+library(RColorBrewer)
+```
+
+## Setting up the API connection
+
+Code hide for privacy and security.Example code below:
+
+consumerKey <- ""
+consumerSecret <- ""
+accessToken <- ""
+accessSecret <- ""
+options(httr_oauth_cache=T) 
+setup_twitter_oauth(consumerKey, consumerSecret, accessToken, accessSecret)
+
+```{r ,include=FALSE}
+
+consumerKey <- "6pucmfEFxM2srgNZ6Vqg6azTe"
+consumerSecret <- "RPcd7OlcX7timMA2JMi2Z1duXwzTh7zWdRu8Q3doZYLbbCXt1b"
+accessToken <- "1032167512186675200-kiuwqbz0U7sywZb2RSyDY4VCZ3JwyZ"
+accessSecret <- "qI6T9hCYPtxvIDTZRRXf8wqh4LIJVirV65rAk5igwFYlQ"
+options(httr_oauth_cache=T) # This will enable the use of a local file to cache OAuth access credentials between R sessions.
+setup_twitter_oauth(consumerKey, consumerSecret, accessToken, accessSecret)
+
+```
+
+## Tweets extraction
+
+To extract tweets based on #futurebass
+
+```{r warning=FALSE}
+fub <- searchTwitter('#futurebass', n=10000)
+
+#get text from tweets
+fub_txt <- sapply(fub, function(x) x$getText())
+
+#create a corpus
+fub_doc <- Corpus(VectorSource(fub_txt))
+```
+
+## Clean the text data
+
+```{r warning=FALSE}
+#to lower
+fub_doc <- tm_map(fub_doc, content_transformer(tolower))
+
+#remove anything other than English letters
+removeNumPunct <- function(x)gsub("[^[:alpha:][:space:]]*", "", x)
+fub_doc <- tm_map(fub_doc, content_transformer(removeNumPunct))
+
+#remove URL
+removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
+fub_doc <- tm_map(fub_doc, content_transformer(removeURL))
+
+#remove emojis
+fub_doc <- tm_map(fub_doc, content_transformer(gsub), pattern="\\W", replace=" ")
+
+#remove punctuation, numbers, space, and stopwords
+fub_doc <- tm_map(fub_doc, removePunctuation)
+fub_doc <- tm_map(fub_doc, removeNumbers)
+fub_doc <- tm_map(fub_doc, stripWhitespace)
+fub_doc <- tm_map(fub_doc, removeWords, stopwords("en"))
+
+```
+
+## Wordcloud
+
+```{r warning=FALSE}
+#term document matrix
+fuba <- TermDocumentMatrix(fub_doc)
+b <- as.matrix(fuba)
+u <- sort(rowSums(b), decreasing = T)
+f <- data.frame(word = names(u), freq=u)
+head(f,10)
+
+#wordcloud
+wordcloud(words = f$word, freq = f$freq, min.freq = 1, max.words =100,
+          random.order = F, colors = brewer.pal(11,"RdYlBu"))
+```
+
+As you can see in wordcloud that the most freq word is **futurebass** which totally make sense.	Furthermore,words like **edm**, **trap**, **house**, **dubstep** are music genres associated with futurebass, due to those twitter users often put many simmilar hashtags in their content toghter in order to get more views from different hashtag followers, or maybe their music really got these elements inside and they just want to identify their music .
+
+Interestingly,there are words like **lorenzo**, **guerillamix**, **kelly**, **gatti**, **denise**, **cage** that I cant barely understand when the plot came out at the first time. After diging on twitter,I realized it was a new debut ep : *Lorenzo Gatti & Denise Kelly's single 'Like That' from The Cage - EP* have out now, and guerillamix which is their music brand company had been posting a lots of text on twitter recently.
