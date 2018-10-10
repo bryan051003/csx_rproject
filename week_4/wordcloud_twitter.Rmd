@@ -15,7 +15,7 @@ Future bass is an electronic dance music genre
  
 ## Import needed libraries
 
-```{r warning=FALSE, eval=FALSE}
+```{r warning=FALSE}
 rm(list=ls(all.names=TRUE)) 
 library(twitteR)
 library(tm)
@@ -103,3 +103,7 @@ wordcloud(words = f$word, freq = f$freq, min.freq = 1, max.words =100,
 As you can see in wordcloud that the most freq word is **futurebass** which totally make sense.	Furthermore,words like **edm**, **trap**, **house**, **dubstep** are music genres associated with futurebass, due to those twitter users often put many simmilar hashtags in their content toghter in order to get more views from different hashtag followers, or maybe their music really got these elements inside and they just want to identify their music .
 
 Interestingly,there are words like **lorenzo**, **guerillamix**, **kelly**, **gatti**, **denise**, **cage** that I cant barely understand when the plot came out at the first time. After diging on twitter,I realized it was a new debut ep : *Lorenzo Gatti & Denise Kelly's single 'Like That' from The Cage - EP* have out now, and guerillamix which is their music brand company had been posting a lots of text on twitter recently.
+
+
+
+
