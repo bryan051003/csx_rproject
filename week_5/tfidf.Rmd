@@ -1,3 +1,17 @@
+---
+title: "TF_IDF 蛋堡歌詞"
+author: "b10401038"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+####載入所需套件
+
+```{r}
+
 library(httr)
 library(RCurl)
 library(XML)
@@ -6,10 +20,15 @@ library(readtext)
 library(tm)
 library(jiebaR)
 library(jiebaRD)
-library(tmcn)
+library(tmcn)#中文版tm但好像也蠻多bug...
 library(tidytext)
 library(ggplot2)
 
+```
+
+####抓出所有歌詞本所對應的網址
+
+```{r  eval = FALSE}
 data <- list()
 
 url  <- "https://mojim.com/twh107409.htm"
@@ -19,14 +38,18 @@ for( i in 1:104) {
  data <- rbind( data, paste('https://mojim.com', url.list[[i]][1], sep='') )
 }
 data <- unlist(data)
+#抓到某幾筆空資料手動刪除
 data<-gsub("https://mojim.com_blank", "", data)
 data<-gsub("https://mojim.com/twy107409x4x10.htm", "", data)
 data<-gsub("https://mojim.com/twy107409x4x11.htm", "", data)
 data<-gsub("https://mojim.com/twy107409x3x7.htm", "", data)
 
 data<-data[data!=""]
+```
 
+####利用上面網址去抓所有歌詞，按每首歌處存
 
+```{r eval = FALSE}
 
 getdoc <- function(url)
 {
@@ -38,7 +61,11 @@ getdoc <- function(url)
 }
 
 sapply(data, getdoc)
+```
 
+####建立文本資料結構與基本文字清洗
+
+```{r warning=FALSE}
 
 page <- readtext("C:/Users/USER/Documents/GitHub/csx_rproject/week_5/data/*.txt", encoding = "big5")
 corpus <- Corpus(VectorSource(page$text))
@@ -56,23 +83,32 @@ myStopWords <- c("更多更詳盡歌詞","Mojim.com","魔鏡歌詞網", "作曲"
 corpus <- tm_map(corpus, toSpace, myStopWords)
 
 
+```
+
+####進行斷詞，並依照歌曲建立TermDocumentMatrix
+
+```{r}
 mixseg = worker()
 jieba_tokenizer = function(c)
 {
   ( segment(c[[1]], mixseg) )
 }
 seg = lapply(corpus, jieba_tokenizer)
-
+#去除空白""
 seg<-Filter(length, seg)
-
+#建DTM
 corpuss <- Corpus(VectorSource(seg))
-
-
 tdm <- DocumentTermMatrix(corpuss)
 inspect(tdm)
-inspect(tdm[50:59, 500:505])
+
+```
+
+####轉成tidytext並算出TF_IDF
+
+```{r}
 
 tidy<-tidy(tdm)
+#tm處理中文有點小BUG，再清洗乾淨一點==
 tidy<- tidy %>%
   filter(term != "蛋堡") %>%
   filter(term != "純音樂") %>%
@@ -80,25 +116,36 @@ tidy<- tidy %>%
   filter(term != "杜振熙")%>%
   filter(term != "歌詞網")%>%
   filter(term != "感謝")
-
+#用套件function算出tf_idf
 tidy <- tidy %>%
   bind_tf_idf(term, document, count)
 tidy
 
+```
+
+####整理格式以方便作圖
+
+```{r}
+
+#這步其實有點多餘
 tidyf<- as.data.frame(tidy)
-
+#建新欄位分組
 tidyf$document<-as.numeric(tidyf$document) 
-
 tidyf<-tidyf %>%
   mutate(word = factor(term, levels = rev(unique(term)))) %>%
   mutate(album = document %/% 10)
 
 tidyf$document<-as.factor(tidyf$document) 
 tidyf$album<-as.factor(tidyf$album) 
+```
 
+####按照分好的組別視覺化重要關鍵字並比較
+
+```{r}
+#每組前15關鍵字比對權重
 tidyf %>%
   group_by(album) %>% 
-  top_n(20,tf_idf) %>% 
+  top_n(15,tf_idf) %>% 
   arrange(desc(tf_idf)) %>%
 
   ggplot(aes(word, tf_idf, fill = album)) +
@@ -106,6 +153,10 @@ tidyf %>%
   labs(x = "album", y = "tf-idf") +
   facet_wrap(~album, ncol = 4, scales = "free_y") +
   coord_flip()
+```
 
 
+######用tf_idf來看歌詞好像得不出甚麼結論呢 哈哈
 
+
+.
