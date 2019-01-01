@@ -1,0 +1,183 @@
+---
+title: "flop hs train"
+author: "b10401038"
+date: "2018年12月27日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r }
+library(readtext)
+library(stringr)
+library(dplyr)
+library(holdem)
+library(tidyr)
+library(caret)
+library(randomForest)
+library(xgboost)
+```
+
+### 讀資料 稍微整理一下
+
+```{r }
+action<-read.csv("C:/Users/USER/Desktop/p/poker.flop.csv")
+action<-action[,-1]
+att<-read.csv("C:/Users/USER/Desktop/p/屬性.csv")
+colnames(att)[1] <- "poker.w.winner"
+flop<-merge(action, att, by = "poker.w.winner", all = T)
+flop<-flop[,-1]
+
+#onehot encoding
+dmy <- dummyVars(" ~ .", data = flop)
+flop <- data.frame(predict(dmy, newdata = flop))
+
+#set hs
+flop$poker.w.HS.flop<-floor(flop$poker.w.HS.flop)
+flop$poker.w.BS.flop<-floor(flop$poker.w.BS.flop)
+str(flop)
+```
+
+### 訓練資料與測試資料比例: 70%建模，30%驗證
+
+```{r}
+
+n <- nrow(flop)
+set.seed(123)
+shuffle <- flop[sample(n), ]
+t_idx <- sample(seq_len(n), size = round(0.7 * n))
+train <- shuffle[t_idx,]
+test <- shuffle[ - t_idx,]
+```
+
+***
+> RandomForest 
+
+
+```{r}
+#randomforest
+set.seed(123)
+rf_model = randomForest(poker.w.HS.flop~.,data=train,ntree=500)
+# 預測
+rf_y = predict(rf_model, test)
+mean((rf_y - test$poker.w.HS.flop)^2) # MSE
+```
+
+### 看需不需要調整參數 幾棵樹?
+
+```{r}
+#tune ntree
+# Observe that what is the best number of trees
+plot(rf_model)
+
+#tune mtry
+set.seed(123)
+tuneRF(train[,-1], train[,1])
+```
+
+##### 看起來不太需要調整~~~
+
+
+### 變數重要程度
+
+```{r}
+# Variable Importance of Random Forest
+rf_model$importance
+varImpPlot(rf_model)
+```
+
+### 預測結果與準確度
+
+```{r}
+cm<-table(test$poker.w.HS.flop, round(rf_y), dnn = c("實際", "預測"))
+cm
+accuracy <- sum(diag(cm)) / sum(cm)
+accuracy
+```
+
+***
+> XGBoost
+
+
+```{r}
+# 1. 將資料格式(Data.frame)，用`xgb.DMatrix()`轉換為 xgboost 的稀疏矩
+
+dtrain = xgb.DMatrix(data = as.matrix(train[,2:15]),
+                     label = train$poker.w.HS.flop)
+dtest = xgb.DMatrix(data = as.matrix(test[,2:15]),
+                    label = test$poker.w.HS.flop)
+
+
+
+# 2. 設定xgb.params，也就是 xgboost 裡面的參數
+
+xgb.params = list(
+  #col的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  colsample_bytree = 0.5,                    
+  # row的抽樣比例，越高表示每棵樹使用的col越多，會增加每棵小樹的複雜度
+  subsample = 0.5,                      
+  booster = "gbtree",
+  # 樹的最大深度，越高表示模型可以長得越深，模型複雜度越高
+  max_depth = 1,           
+  # boosting會增加被分錯的資料權重，而此參數是讓權重不會增加的那麼快，因此越大會讓模型愈保守
+  eta = 0.03,
+  # 或用'mae'也可以
+  eval_metric = "rmse",                      
+  objective = "reg:linear",
+  # 越大，模型會越保守，相對的模型複雜度比較低
+  gamma = 0)               
+
+
+
+# 3. 使用xgb.cv()，tune 出最佳的決策樹數量
+cv.model = xgb.cv(
+  params = xgb.params, 
+  data = dtrain,
+  nfold = 5,     # 5-fold cv
+  nrounds=200,   # 測試1-100，各個樹總數下的模型
+  # 如果當nrounds < 30時，就已經有overfitting情況發生，那表示不用繼續tune下去了，可以提早停止                
+  early_stopping_rounds = 30, 
+  print_every_n = 20 # 每20個單位才顯示一次結果，
+) 
+
+tmp = cv.model$evaluation_log
+
+plot(x=1:nrow(tmp), y= tmp$train_rmse_mean, col='red', xlab="nround", ylab="rmse", main="Avg.Performance in CV") 
+points(x=1:nrow(tmp), y= tmp$test_rmse_mean, col='blue') 
+legend("topright", pch=1, col = c("red", "blue"), 
+       legend = c("Train", "Validation") )
+```
+
+
+```{r}
+# 獲得 best nround
+best.nrounds = cv.model$best_iteration 
+best.nrounds
+
+
+# 4. 用xgb.train()建立模型
+xgb.model = xgb.train(paras = xgb.params, 
+                      data = dtrain,
+                      nrounds = best.nrounds) 
+
+# 如果要畫出 xgb 內的所有決策樹，可以用以下函式(但因為會很多，這裡就不畫了)
+#xgb.plot.tree(model = xgb.model) 
+
+# 預測
+xgb_y = predict(xgb.model, dtest)
+mean((xgb_y - test$poker.w.HS.flop)^2) # MSE
+```
+
+### 預測結果與準確度
+
+```{r}
+xcm<-table(test$poker.w.HS.flop, round(xgb_y), dnn = c("實際", "預測"))
+xcm
+accuracy <- sum(diag(xcm)) / sum(xcm)
+accuracy
+```
+
